@@ -41,7 +41,6 @@ struct PriceUpdate
 struct Clock 
 {
     // kinda shitty. changing the convention and return type
-    // of std::chrono::system_clock drop in.
     virtual int now() const
     {
         const auto tp{ std::chrono::system_clock::now() };
@@ -52,12 +51,8 @@ struct Clock
 struct MockClock : Clock 
 {
     int fixed;
-    // ??? explicit ???
     explicit MockClock(int fixed_): fixed{fixed_} {}
 
-    int now() const override
-    {
-        return fixed;
-    }
+    int now() const override { return fixed; }
 };
 

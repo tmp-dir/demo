@@ -1,6 +1,6 @@
 #pragma once
 
-#include <iostream>
+#include <cassert>
 #include "common.hpp"
 
 template<typename ClockT>
@@ -16,16 +16,13 @@ public:
             add_instrument(i);
     }
 
-    // kinda gross? either way we have to treat the spot price as special. kiss.
     void update_spot(double price) { spot = price; }
 
     void update_instrument(const PriceUpdate& update)
     {
         auto [old_log_price, old_T] = future_map[update.meta];
-
-        auto diff = (update.meta.expiry - clock.now()); // unix ts stored in SECONDS
+        auto diff = (update.meta.expiry - clock.now());
         auto T = diff / SECONDS_IN_YEAR;
-
 
         s_x += (T - old_T);
         s_xx += (T*T - old_T*old_T);
@@ -60,13 +57,11 @@ public:
 
     void add_instrument(const PriceUpdate& update)
     {
-        auto diff = (update.meta.expiry - clock.now()); // unix ts stored in SECONDS
+        auto diff = (update.meta.expiry - clock.now());
         constexpr double YEAR_IN_S = 60*60*24*365.25;
 
         auto T = diff / YEAR_IN_S;
         auto rate = std::log(update.price/spot)/T;
-
-        /* std::cout << update.price << ": T: " << T << ", rate: " << rate << std::endl; */
 
         ++n;
         s_x += T;
@@ -74,6 +69,7 @@ public:
 
         auto inv_t = 1/T;
         auto log_price = std::log(update.price);
+
         f_i_t_i += log_price*inv_t;
         t_i += inv_t;
 
@@ -87,8 +83,7 @@ public:
     std::pair<double, double> get_coeff() const
     {
         double denom = n* s_xx - s_x*s_x;
-        // hacky doubles equal.
-        if (!n || (std::fabs(denom) < 1e-8))
+        if ((n < 2) || doubles_equal(denom, 0.0))
             return { std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN() };
 
         // see README
@@ -97,6 +92,7 @@ public:
 
         double slope = (n * s_xy - s_x * s_y) / denom;
         double intercept = (s_y - slope * s_x) / n;
+
         // messed up the sign.
         return {-intercept, -slope};
     }
@@ -106,34 +102,21 @@ private:
     ClockT clock;
     double spot, s_x, s_xx, n, f_i, t_i, f_i_t_i;
 
-
-
-    /* double transform(InstrumentMeta meta, double price) */
-    /* { */
-        
-    /*     assert(spot); */
-    /*     assert(price > 0.); */
-    /*     return std::log(price/spot)/T; */
-    /*     // instantaneous rates, what better. */
-    /*     // F = Se^{rT} => ln(F/S) = rT => r = ln(F/S)/T */
-    /*     // going to just use annualised. */
-    /* } */
-
-
-    // kinda dangerous. since i assume idx always valid. means whatever
-    // is publishing also has to have control over this fella.
     void remove_instrument(const InstrumentMeta& meta)
     {
-        double rate, T = future_map[meta];
+        auto [old_log_price, T] = future_map[meta];
 
-        /* --n; */
-        /* s_x -= T; */
-        /* s_y -= rate; */
-        /* s_xx -= T*T; */
-        /* s_xy -= rate*T; */
+        --n;
+        s_x -= T;
+        s_xx -= T*T;
 
-        // FIXME: rm from map. not that it's really necessary.`
-        /* future_map.remove(meta); */
+        auto old_inv_t = 1/T;
+
+        f_i_t_i -= old_log_price*old_inv_t;
+        t_i -= old_inv_t;
+        f_i -= old_log_price;
+
+        future_map.erase(meta);
     }
 
 };
