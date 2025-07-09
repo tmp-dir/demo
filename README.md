@@ -16,7 +16,7 @@ to handle the spot updates, I can split out the necessary params further and jus
 
 
 $$s_x = \Sigma T_i$$
-$$s_y = \Sigma r_i = \Sigma [\frac{\log{S}}{T_i} - \frac{\log{F_i}}{T_i}}]$$
+$$s_y = \Sigma r_i = \Sigma [\frac{\log{S}}{T_i} - \frac{\log{F_i}}{T_i}]$$
 $$ = \log{S} \Sigma \frac{1}{T_i} - \Sigma \frac{F_i}{T_i} $$
 
 so can just track the T_i and F_i / T_i sum and reconstitute.
