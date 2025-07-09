@@ -15,8 +15,8 @@ doing some lin reg stuff. tried to make it a bit more fun and minimise updates. 
 to handle the spot updates, I can split out the necessary params further and just compute the spot part when the rate is requested. Math here (F= future, S = spot, T = tte, r= implied rate):
 
 
-$$s_x = \Sigma T_i$$.
-$$s_y = \Sigma r_i = \Sigma [\frac{\log{S}}{T_i} - \frac{\log{F_i}{T_i}}]$$
+$$s_x = \Sigma T_i$$
+$$s_y = \Sigma r_i = \Sigma [\frac{\log{S}}{T_i} - \frac{\log{F_i}}{T_i}}]$$
 $$ = \log{S} \Sigma \frac{1}{T_i} - \Sigma \frac{F_i}{T_i} $$
 
 so can just track the T_i and F_i / T_i sum and reconstitute.
@@ -27,14 +27,12 @@ $$s_xy = \Sigma r_i T_i = \Sigma [ \log{S} - \log{F_i} ] = n \log{S} - \Sigma \l
 
 so here just need to track the sum of the log futures.
 
-combines and returns that.
-
-
 ## Usage
 
 this will probably get it compiling, if fetch is installed.
 
     mkdir build && cd build && cmake ..
     cmake --build . && ./YieldCurve_Tests
+    cmake --build . && .src/YieldCurve
 
 otherwise check out main.cpp && model.hpp.

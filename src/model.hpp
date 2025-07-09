@@ -19,7 +19,7 @@ public:
     // kinda gross? either way we have to treat the spot price as special. kiss.
     void update_spot(double price) { spot = price; }
 
-    void update_instrument(const PriceUpdate& update);
+    void update_instrument(const PriceUpdate& update)
     {
         auto [old_log_price, old_T] = future_map[update.meta];
 
